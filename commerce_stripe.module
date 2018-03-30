@@ -17,11 +17,6 @@ define('COMMERCE_STRIPE_API_VERSION_CUSTOM', 'Custom');
  */
 function commerce_stripe_page_build(&$page) {
   drupal_add_js('https://js.stripe.com/v3', 'external');
-
-  $key = trim(variable_get('stripe_publishable', ''));
-  if (!empty($key)) {
-    drupal_add_js(array('stripe' => array('publicKey' => $key)), 'setting');
-  }
 }
 
 /**
@@ -1204,6 +1199,7 @@ function _commerce_stripe_form_configure_stripe_common(&$form, $stripe_token, $i
   $form['#attached']['js'][] = array(
     'data' => array(
       'stripe' => array(
+        'publicKey' => trim($public_key),
         'integration_type' => $integration_type,
       ),
     ),
