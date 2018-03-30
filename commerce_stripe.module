@@ -1307,7 +1307,9 @@ function commerce_stripe_cardonfile_update_form($form, &$form_state, $op, $card_
   if ($wrapper->__isset('commerce_cardonfile_profile') && $wrapper->commerce_cardonfile_profile->value()) {
     $profile = $wrapper->commerce_cardonfile_profile->value();
   }
-  else {
+
+  // If the returned wrapper value is actually empty, create a new one.
+  if (empty($profile)) {
     $profile = commerce_customer_profile_new('billing', $account->uid);
 
     // Prepare an addressfield array to set to the customer profile.
