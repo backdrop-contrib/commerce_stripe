@@ -1659,7 +1659,7 @@ function commerce_stripe_form_commerce_payment_order_transaction_add_form_alter(
  * Callback for the Stripe Elements form.
  */
 function _commerce_stripe_elements_form() {
-  $form = [];
+  $form = array();
   $form['credit_card'] = array(
     '#tree' => TRUE,
     '#attached' => array(
