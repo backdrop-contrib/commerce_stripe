@@ -28,18 +28,28 @@ function commerce_stripe_requirements($phase) {
     }
     $requirements['commerce_stripe_php']['title'] = $t('Stripe PHP library');
 
-    // Check for Commerce currency.
-    if (in_array(commerce_default_currency(), array('USD', 'CAD', 'EUR', 'GBP', 'AUD', 'CHF'))) {
+    // Check for supported payment currencies.
+    $supported_currencies = commerce_stripe_payment_currencies();
+    $currencies = commerce_currencies();
+    $default = commerce_default_currency();
+
+    if (in_array(strtolower(commerce_default_currency()), $supported_currencies)) {
       $requirements['commerce_stripe_currency'] = array(
         'value' => $t('Valid currency'),
         'severity' => REQUIREMENT_OK,
+        'description' => $t('Currencies are correctly configured. Default: @default', array(
+          '@default' => $currencies[$default]['name'],
+        )),
       );
     }
     else {
       $requirements['commerce_stripe_currency'] = array(
         'value' => $t('Invalid default currency!'),
         'severity' => REQUIREMENT_ERROR,
-        'description' => $t('Stripe currently supports only USD, CAD, EUR, GBP, AUD and CHF as a currency.'),
+        'description' => $t('Your Stripe account does not accept default currency @default. Please <a href="@config">configure your currency settings</a> and update your payment method settings accordingly.', array(
+          '@default' => $currencies[$default]['name'],
+          '@config' => url('admin/commerce/config/currency'),
+        )),
       );
     }
     $requirements['commerce_stripe_currency']['title'] = $t('Stripe currency check');

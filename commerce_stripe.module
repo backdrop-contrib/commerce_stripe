@@ -202,16 +202,20 @@ function commerce_stripe_return_access($order, $transaction) {
 function commerce_stripe_settings_form($settings) {
   $form = array();
   $currencies = commerce_currencies(TRUE);
-  $stripe_currency_list = array();
+  $currency_list = array();
+  $supported_currencies = commerce_stripe_payment_currencies();
 
+  // Ensure we only include currencies we support.
   foreach ($currencies as $currency_code => $currency) {
-    $stripe_currency_list[$currency_code] = $currency['name'];
+    if (in_array(strtolower($currency_code), $supported_currencies)) {
+      $currency_list[$currency_code] = $currency['name'];
+    }
   }
 
   $form['stripe_currency'] = array(
     '#type' => 'select',
     '#title' => t('Currency'),
-    '#options' => $stripe_currency_list,
+    '#options' => $currency_list,
     '#description' => t('Select the currency that you are using.'),
     '#default_value' => !empty($settings['stripe_currency']) ? $settings['stripe_currency'] : 'USD',
   );
@@ -1624,7 +1628,29 @@ function commerce_stripe_commerce_stripe_metadata($order) {
  */
 // @todo: Use with a global config we can programmatically change (via Rules etc.)
 function _commerce_stripe_set_api_key($payment_method) {
-  Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
+  if (!empty($payment_method['settings']['secret_key'])) {
+    Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
+  }
+}
+
+/**
+ * Supported payment currencies will vary by location of the Stripe account.
+ *
+ * return array
+ *   An associative array of three-character currency codes.
+ */
+function commerce_stripe_payment_currencies() {
+  commerce_stripe_load_library();
+  $supported_currencies = array();
+  $payment_method = commerce_payment_method_instance_load('commerce_stripe|commerce_payment_commerce_stripe');
+
+  if (!empty($payment_method['settings']['secret_key'])) {
+    _commerce_stripe_set_api_key($payment_method);
+    $info = \Stripe\Account::retrieve();
+    $country_spec = \Stripe\CountrySpec::retrieve($info->country);
+    $supported_currencies = $country_spec->supported_payment_currencies;
+  }
+  return $supported_currencies;
 }
 
 /**
