@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * @file
+ * Adds support for Stripe Connect using a single site-wide client ID.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function commerce_stripe_connect_menu() {
+  $items = array();
+
+  // Stripe platform administration.
+  $items['admin/commerce/config/stripe-platform'] = array(
+    'title' => 'Stripe platform configuration',
+    'description' => 'Register platform data, set application fee, and view connected accounts.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_stripe_platform_configuration_form'),
+    'access arguments' => array('administer commerce stripe platform'),
+    'file' => 'includes/commerce_stripe_connect.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function commerce_stripe_connect_permission() {
+  return array(
+    'administer commerce stripe platform' => array(
+      'title' => t('Administer Stripe platform settings'),
+      'description' => t('Allows users to register platform data and view connected accounts.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Returns the default settings for the Stripe Connect module.
+ */
+function commerce_stripe_connect_default_settings() {
+  return array(
+    'platform_client_id' => '',
+    'webhook_signing_secret' => '',
+    'application_fee_method' => 'percentage',
+    'application_fee_percentage' => '0',
+    'application_fee_amount' => '0',
+    'platform_currency' => '',
+    'connected_account_id' => '',
+    'connected_secret_key' => '',
+    'connected_public_key' => '',
+  );
+}
+
+/**
+ * Returns the Stripe Connect settings as an associative array.
+ */
+function commerce_stripe_connect_get_settings() {
+  return variable_get('commerce_stripe_connect_settings', commerce_stripe_connect_default_settings()) + commerce_stripe_connect_default_settings();
+}
+
+/**
+ * Returns the Stripe Connect setting value for the given setting key.
+ */
+function commerce_stripe_connect_get_setting($key, $default_value = NULL) {
+  $settings = commerce_stripe_connect_get_settings();
+  return isset($settings[$key]) ? $settings[$key] : $default_value;
+}
+
+/**
+ * Set the value for the given Stripe Connect setting key.
+ */
+function commerce_stripe_connect_set_setting($key, $value) {
+  $settings = commerce_stripe_connect_get_settings();
+  $settings[$key] = $value;
+  variable_set('commerce_stripe_connect_settings', $settings);
+}
