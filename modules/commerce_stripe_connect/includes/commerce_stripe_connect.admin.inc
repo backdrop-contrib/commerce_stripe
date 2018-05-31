@@ -21,9 +21,16 @@ function commerce_stripe_platform_configuration_form(array $form, array &$form_s
 
   $form['platform_client_id'] = array(
     '#type' => 'textfield',
-    '#title' => t('Platform client ID'),
-    '#description' => t('Client ID. Get your ID from https://dashboard.stripe.com/account/applications/settings'),
+    '#title' => t('Stripe platform client ID'),
+    '#description' => t('Find your client ID at https://dashboard.stripe.com/account/applications/settings.'),
     '#default_value' => $settings['platform_client_id'],
+    '#required' => TRUE,
+  );
+  $form['platform_secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Stripe platform account secret key'),
+    '#description' => t('Find your secret key at https://dashboard.stripe.com/account/apikeys.'),
+    '#default_value' => $settings['platform_secret_key'],
     '#required' => TRUE,
   );
 
@@ -144,4 +151,50 @@ function commerce_stripe_platform_configuration_form_submit(array $form, array &
   }
 
   drupal_set_message(t('The configuration options have been saved.'));
+}
+
+/**
+ * Builds the Stripe Connect account admin page.
+ */
+function commerce_stripe_connect_admin_page() {
+  $settings = commerce_stripe_connect_get_settings();
+
+  // Verify required platform settings.
+  if (empty($settings['platform_client_id']) || empty($settings['platform_secret_key'])) {
+    $content = t('You cannot connect this site to a Standard Stripe account until the platform Client ID is configured.');
+
+    if (user_access('administer commerce stripe platform')) {
+      $content .= ' ' . l(t('Configure it now'), 'admin/commerce/config/stripe-platform');
+    }
+
+    return $content;
+  }
+
+  // If the site is already connected to a Stripe account, display a message.
+  if (!empty($settings['connected_account_id'])) {
+    return t('Your site is already connected to a Stripe account.');
+  }
+
+  // Otherwise display a Stripe Connect button.
+  $content = array();
+
+  $content['message'] = array(
+    '#type' => 'item',
+    '#title' => t('Connection status'),
+    '#markup' => t('Your site is not currently connected to your Standard Stripe account.'),
+  );
+
+  $url = 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=' . $settings['platform_client_id'] . '&scope=read_write&state=' . drupal_get_token();
+
+  $content['stripe_button'] = array(
+    '#type' => 'markup',
+    '#markup' => '<a href="' . $url . '" class="stripe-connect"><span>' . t('Connect with Stripe') . '</span></a>',
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'commerce_stripe_connect') . '/theme/commerce_stripe_connect.admin.css',
+      ),
+    ),
+  );
+
+  return $content;
 }
