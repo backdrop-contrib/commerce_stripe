@@ -170,31 +170,106 @@ function commerce_stripe_connect_admin_page() {
     return $content;
   }
 
-  // If the site is already connected to a Stripe account, display a message.
-  if (!empty($settings['connected_account_id'])) {
-    return t('Your site is already connected to a Stripe account.');
-  }
-
-  // Otherwise display a Stripe Connect button.
+  // Display the Stripe connection status.
   $content = array();
 
   $content['message'] = array(
     '#type' => 'item',
     '#title' => t('Connection status'),
-    '#markup' => t('Your site is not currently connected to your Standard Stripe account.'),
   );
 
-  $url = 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=' . $settings['platform_client_id'] . '&scope=read_write&state=' . drupal_get_token();
+  // If the site is already connected to a Stripe account, display a form
+  // letting the administrator disconnect it.
+  if (!empty($settings['connected_account_id'])) {
+    // @todo Add a list here of payment method rules configured to use it.
+    $content['message']['#markup'] = t('Your site is connected to a Standard Stripe account.');
+    $content['disconnect_form'] = drupal_get_form('commerce_stripe_connect_admin_disconnect_form');
+  }
+  else {
+    $content['message']['#markup'] = t('Your site is not currently connected to your Standard Stripe account.');
 
-  $content['stripe_button'] = array(
-    '#type' => 'markup',
-    '#markup' => '<a href="' . $url . '" class="stripe-connect"><span>' . t('Connect with Stripe') . '</span></a>',
-    '#attached' => array(
-      'css' => array(
-        drupal_get_path('module', 'commerce_stripe_connect') . '/theme/commerce_stripe_connect.admin.css',
+    $url = 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=' . $settings['platform_client_id'] . '&scope=read_write&state=' . drupal_get_token();
+
+    $content['stripe_button'] = array(
+      '#type' => 'markup',
+      '#markup' => '<a href="' . $url . '" class="stripe-connect"><span>' . t('Connect with Stripe') . '</span></a>',
+      '#attached' => array(
+        'css' => array(
+          drupal_get_path('module', 'commerce_stripe_connect') . '/theme/commerce_stripe_connect.admin.css',
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   return $content;
+}
+
+/**
+ * Form callback: builds the form to disconnect the site's Stripe account.
+ */
+function commerce_stripe_connect_admin_disconnect_form(array $form, array &$form_state) {
+  $form['disconnect'] = array(
+    '#type' => 'submit',
+    '#value' => t('Disconnect now'),
+  );
+
+  return $form;
+}
+
+/**
+ * Form callback: submits the form to disconnect the site's Stripe account.
+ */
+function commerce_stripe_connect_admin_disconnect_form_submit($form, &$form_state) {
+  // Exit now if for some reason the Stripe library is unavailable.
+  if (!commerce_stripe_load_library()) {
+    drupal_set_message(t('The form did not submit because the Stripe PHP library was not found.'), 'error');
+    return;
+  }
+
+  // Load the Stripe Connect settings and trim the API key if necessary.
+  $settings = commerce_stripe_connect_get_settings();
+  $settings['platform_secret_key'] = trim($settings['platform_secret_key']);
+
+  try {
+    // Verify that account has not already been disconnected.
+    \Stripe\Stripe::setApiKey($settings['platform_secret_key']);
+    $account = \Stripe\Account::retrieve($settings['connected_account_id']);
+
+    // Disconnect account.
+    $ch = curl_init();
+    curl_setopt_array($ch, array(
+      CURLOPT_URL => 'https://connect.stripe.com/oauth/deauthorize',
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_HTTPHEADER => array('Authorization: Bearer ' . $settings['platform_secret_key']),
+      CURLOPT_POST => true,
+      CURLOPT_POSTFIELDS => http_build_query(array(
+        'client_id' => $settings['platform_client_id'],
+        'stripe_user_id' => $settings['connected_account_id'],
+      ))
+    ));
+    $response = curl_exec($ch);
+    $response_body = drupal_json_decode($response);
+
+    // Display any errors if found.
+    if (!empty($response_body['error'])) {
+      drupal_set_message(check_plain($response_body['error_description']), 'error');
+      return;
+    }
+
+    // Show a 404 page if we received malformed data in the response.
+    if (empty($response_body['stripe_user_id'])) {
+      drupal_not_found();
+    }
+  }
+  catch (Exception $e) {
+    // An exception will be thrown if the account could not be loaded from
+    // Stripe. We continue submitting this function to finalize the disconnect.
+  }
+
+  // Remove connected account id and keys from settings.
+  commerce_stripe_connect_set_setting('connected_account_id', '');
+  commerce_stripe_connect_set_setting('connected_secret_key', '');
+  commerce_stripe_connect_set_setting('connected_public_key', '');
+
+  drupal_set_message('Your Stripe account has been disconnected. Any payment methods that were using it will need to be reconfigured.');
 }
