@@ -133,6 +133,9 @@ function commerce_stripe_refund_form_submit($form, &$form_state) {
     $payment_method['settings']['secret_key'] = $connect_settings['connected_secret_key'];
   }
 
+  // Let modules alter the refund object to add attributes.
+  drupal_alter('commerce_stripe_order_refund', $data, $form_state);
+
   try {
     Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
     $refund = Stripe\Refund::create($data);

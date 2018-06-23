@@ -182,6 +182,45 @@ function commerce_stripe_connect_commerce_stripe_order_charge_alter(&$charge, $o
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Provide option to proportionally refund application fees.
+ */
+function commerce_stripe_connect_form_commerce_stripe_refund_form_alter(&$form, &$form_state, $form_id) {
+  // Ensure the original transaction actually has transaction fees.
+  $transaction = $form_state['transaction'];
+  if (!empty($transaction->payload)) {
+    $timestamp = key($transaction->payload);
+    $payload = json_decode($transaction->payload[$timestamp]);
+
+    if (!empty($payload->application_fee)) {
+      $form['refund_application_fee'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Proportionally refund any application fees.'),
+        '#default_value' => TRUE,
+        '#weight' => 2,
+      );
+
+      $form['actions']['#weight'] = 3;
+    }
+  }
+}
+
+/**
+ * Implements hook_commerce_stripe_order_refund_alter().
+ */
+function commerce_stripe_connect_commerce_stripe_order_refund_alter(&$refund, $form_state) {
+  // If developers use hook to specify a refund application fee setting, do not overwrite.
+  if (!empty($refund['refund_application_fee'])) {
+    return;
+  }
+
+  if (!empty($form_state['values']['refund_application_fee'])) {
+    $refund['refund_application_fee'] = true;
+  }
+}
+
+/**
  * Returns the default settings for the Stripe Connect module.
  */
 function commerce_stripe_connect_default_settings() {

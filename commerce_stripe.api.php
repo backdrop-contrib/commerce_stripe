@@ -17,7 +17,6 @@ function hook_commerce_stripe_metadata($order) {
   );
 }
 
-
 /**
  * Alter the description of the order sent to Stripe in the payment details.
  *
@@ -38,4 +37,12 @@ function hook_commerce_stripe_order_charge_alter(&$charge, $order) {
     // Then add application fees.
     $charge['application_fee'] = rand(1, 1000);
   }
+}
+
+/**
+ * Alter the reason of the refund.
+ */
+function hook_commerce_stripe_order_refund_alter(&$refund, $form_state) {
+  // Example of alteration of the reason.
+  $refund['reason'] = t('duplicate');
 }
