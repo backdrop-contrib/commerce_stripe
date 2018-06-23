@@ -151,7 +151,7 @@ function commerce_stripe_connect_commerce_stripe_order_charge_alter(&$charge, $o
   }
 
   // Check that connected account is being used for API requests.
-  if (!empty($order->payment_method_settings['use_connected_account']) &&
+  if (empty($order->payment_method_settings['use_connected_account']) ||
     $order->payment_method_settings['use_connected_account'] != 'site account') {
     return;
   }
