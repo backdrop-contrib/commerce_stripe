@@ -223,26 +223,67 @@ function commerce_stripe_settings_form($settings) {
     }
   }
 
-  $form['stripe_currency'] = array(
-    '#type' => 'select',
-    '#title' => t('Currency'),
-    '#options' => $currency_list,
-    '#description' => t('Select the currency that you are using.'),
-    '#default_value' => !empty($settings['stripe_currency']) ? $settings['stripe_currency'] : 'USD',
-  );
   $form['secret_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Secret Key'),
     '#description' => t('Secret API Key. Get your key from https://stripe.com/'),
-    '#default_value' => !empty($settings['secret_key']) ? $settings['secret_key'] : '',
+    '#default_value' => $settings['secret_key'],
     '#required' => TRUE,
   );
   $form['public_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Publishable Key'),
     '#description' => t('Publishable API Key. Get your key from https://stripe.com/'),
-    '#default_value' => !empty($settings['public_key']) ? $settings['public_key'] : '',
+    '#default_value' => $settings['public_key'],
     '#required' => TRUE,
+  );
+
+  // If the site has the Commerce Stripe Connect submodule enabled and has
+  // connected to a site-wide Stripe Standard account, adjust the settings so
+  // that account's API keys can be used instead of directly inputted here.
+  if (module_exists('commerce_stripe_connect')) {
+    $connect_settings = commerce_stripe_connect_get_settings();
+    if (!empty($connect_settings['connected_account_id'])) {
+      // Add radio button options as first form element.
+      $form['use_connected_account'] = array(
+        '#type' => 'radios',
+        '#title' => t('API Credentials'),
+        '#options' => array(
+          'none' => t('Input API credentials for this payment method.'),
+          'site account' => t('Use the site-wide account identified via Stripe Connect.'),
+        ),
+        '#default_value' => $settings['use_connected_account'],
+        '#weight' => -10,
+      );
+
+      unset($form['secret_key']['#required']);
+      $form['secret_key']['#states'] = array(
+        'visible' => array(
+          ':input[name="parameter[payment_method][settings][payment_method][settings][use_connected_account]"]' => array('value' => 'none'),
+        ),
+        'required' => array(
+          ':input[name="parameter[payment_method][settings][payment_method][settings][use_connected_account]"]' => array('value' => 'none'),
+        ),
+      );
+
+      unset($form['public_key']['#required']);
+      $form['public_key']['#states'] = array(
+        'visible' => array(
+          ':input[name="parameter[payment_method][settings][payment_method][settings][use_connected_account]"]' => array('value' => 'none'),
+        ),
+        'required' => array(
+          ':input[name="parameter[payment_method][settings][payment_method][settings][use_connected_account]"]' => array('value' => 'none'),
+        ),
+      );
+    }
+  }
+
+  $form['stripe_currency'] = array(
+    '#type' => 'select',
+    '#title' => t('Currency'),
+    '#options' => $currency_list,
+    '#description' => t('Select the currency that you are using.'),
+    '#default_value' => !empty($settings['stripe_currency']) ? $settings['stripe_currency'] : 'USD',
   );
   $form['display_title'] = array(
     '#type' => 'textfield',
@@ -1888,6 +1929,7 @@ function commerce_stripe_default_settings() {
   return array(
     'secret_key' => '',
     'public_key' => '',
+    'use_connected_account' => 'none',
     'commerce_stripe_api_version' => COMMERCE_STRIPE_API_LATEST_TESTED,
     'commerce_stripe_api_version_custom' => '',
   );
