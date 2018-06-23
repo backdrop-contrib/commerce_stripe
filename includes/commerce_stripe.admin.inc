@@ -21,6 +21,16 @@ function commerce_stripe_refund_form($form, &$form_state, $order, $transaction) 
     return $form;
   }
 
+  // Inject the Stripe Connect public and secret key if appropriate.
+  if (module_exists('commerce_stripe_connect') &&
+    !empty($payment_method['settings']['use_connected_account']) &&
+    $payment_method['settings']['use_connected_account'] == 'site account') {
+
+    $connect_settings = commerce_stripe_connect_get_settings();
+    $payment_method['settings']['public_key'] = $connect_settings['connected_public_key'];
+    $payment_method['settings']['secret_key'] = $connect_settings['connected_secret_key'];
+  }
+
   // Make sure we can load the original charge object.
   try {
     \Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
@@ -112,6 +122,16 @@ function commerce_stripe_refund_form_submit($form, &$form_state) {
     'amount' => commerce_currency_decimal_to_amount($form_state['values']['amount'], $transaction->currency_code),
     'reason' => $form_state['values']['reason'],
   );
+
+  // Inject the Stripe Connect public and secret key if appropriate.
+  if (module_exists('commerce_stripe_connect') &&
+    !empty($payment_method['settings']['use_connected_account']) &&
+    $payment_method['settings']['use_connected_account'] == 'site account') {
+
+    $connect_settings = commerce_stripe_connect_get_settings();
+    $payment_method['settings']['public_key'] = $connect_settings['connected_public_key'];
+    $payment_method['settings']['secret_key'] = $connect_settings['connected_secret_key'];
+  }
 
   try {
     Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));

@@ -114,6 +114,16 @@ function commerce_stripe_libraries_postload_callback($library, $version = NULL, 
     $payment_method = commerce_payment_method_instance_load('commerce_stripe|commerce_payment_commerce_stripe');
 
     $settings = $payment_method['settings'];
+
+    // If the site is using the Commerce Stripe Connect submodule and the
+    // payment method is configured to use a site-wide connected account, swap
+    // in its secret and public key now.
+    if (module_exists('commerce_stripe_connect') && !empty($settings['use_connected_account']) && $settings['use_connected_account'] == 'site account') {
+      $connect_settings = commerce_stripe_connect_get_settings();
+      $settings['secret_key'] = $connect_settings['connected_secret_key'];
+      $settings['public_key'] = $connect_settings['connected_public_key'];
+    }
+
     if (!isset($settings['secret_key']) || empty($settings['secret_key'])) {
       drupal_set_message(t('Stripe secret and public key are required in order to use Stripe payment method. See README.txt for instructions.'), 'warning');
       $link = l(t('configured here'), 'admin/commerce/config/payment-methods');
@@ -924,6 +934,17 @@ function _commerce_stripe_load_settings($name = NULL) {
 
   if (isset($commerce_stripe_payment_method)) {
     $settings = $commerce_stripe_payment_method['settings'];
+
+    // If the site is using the Commerce Stripe Connect submodule and is configured
+    // to use the site-wide account public and secret keys, use those here.
+    if (module_exists('commerce_stripe_connect') &&
+      !empty($settings['use_connected_account']) &&
+      $settings['use_connected_account'] == 'site account') {
+
+      $connect_settings = commerce_stripe_connect_get_settings();
+      $settings['public_key'] = $connect_settings['connected_public_key'];
+      $settings['secret_key'] = $connect_settings['connected_secret_key'];
+    }
   }
 
   return $settings;
@@ -1660,6 +1681,12 @@ function _commerce_stripe_set_api_key($payment_method) {
   if (!empty($payment_method['settings']['secret_key'])) {
     Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
   }
+  elseif (!empty($payment_method['settings']['use_connected_account']) && $payment_method['settings']['use_connected_account'] == 'site account') {
+    if (module_exists('commerce_stripe_connect')) {
+      $connect_settings = commerce_stripe_connect_get_settings();
+      Stripe\Stripe::setApiKey(trim($connect_settings['connected_secret_key']));
+    }
+  }
 }
 
 /**
@@ -1673,12 +1700,14 @@ function commerce_stripe_payment_currencies() {
   $supported_currencies = array();
   $payment_method = commerce_payment_method_instance_load('commerce_stripe|commerce_payment_commerce_stripe');
 
-  if (!empty($payment_method['settings']['secret_key'])) {
+  if (!empty($payment_method['settings']['secret_key']) ||
+    (!empty($payment_method['settings']['use_connected_account']) && $payment_method['settings']['use_connected_account'] == 'site account')) {
     _commerce_stripe_set_api_key($payment_method);
     $info = \Stripe\Account::retrieve();
     $country_spec = \Stripe\CountrySpec::retrieve($info->country);
     $supported_currencies = $country_spec->supported_payment_currencies;
   }
+
   return $supported_currencies;
 }
 
