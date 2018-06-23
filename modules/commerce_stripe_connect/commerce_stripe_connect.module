@@ -142,6 +142,46 @@ function commerce_stripe_connect_authorize() {
 }
 
 /**
+ * Implements hook_commerce_stripe_order_charge_alter().
+ */
+function commerce_stripe_connect_commerce_stripe_order_charge_alter(&$charge, $order) {
+  // If developers use hook to specify a different application fee, do not overwrite.
+  if (!empty($charge['application_fee'])) {
+    return;
+  }
+
+  // Check that connected account is being used for API requests.
+  if (!empty($order->payment_method_settings['use_connected_account']) &&
+    $order->payment_method_settings['use_connected_account'] != 'site account') {
+    return;
+  }
+
+  // Calculate and add application fee to the charge.
+  $connect_settings = commerce_stripe_connect_get_settings();
+
+  if ($connect_settings['application_fee_method'] == 'percentage') {
+    if (empty($connect_settings['application_fee_percentage'])) {
+      return;
+    }
+    $fee = $charge['amount'] * $connect_settings['application_fee_percentage'] / 100;
+    $fee = (int) round($fee);
+  }
+  else {
+    if (empty($connect_settings['application_fee_amount'])) {
+      return;
+    }
+    $fee = commerce_currency_decimal_to_amount($connect_settings['application_fee_amount'], $charge['currency']);
+  }
+
+  if ($fee > 0) {
+    // Maximum fee is order total charge minus 2.9% + $0.30 (the Stripe transaction fee).
+    $stripe_fee = (int) round(0.029 * $charge['amount'] + 30);
+    $max_fee = $charge['amount'] - $stripe_fee;
+    $charge['application_fee'] = min($fee, $max_fee);
+  }
+}
+
+/**
  * Returns the default settings for the Stripe Connect module.
  */
 function commerce_stripe_connect_default_settings() {

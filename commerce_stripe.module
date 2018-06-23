@@ -655,6 +655,10 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
     $c['receipt_email'] = $order->mail;
   }
 
+  // Include the payment method settings array on the order object in a
+  // temporary field for use in the ensuing hooks.
+  $order->payment_method_settings = $payment_method['settings'];
+
   // The metadata could be added via the alter below but for compatibility
   // reasons it may stay.
   commerce_stripe_add_metadata($c, $order);
@@ -987,6 +991,10 @@ function commerce_stripe_cardonfile_charge($payment_method, $card_data, $order, 
     'capture' => $txn_capture_bool,
     'description' => $description,
   );
+
+  // Include the payment method settings array on the order object in a
+  // temporary field for use in the ensuing hooks.
+  $order->payment_method_settings = $payment_method['settings'];
 
   commerce_stripe_add_metadata($c, $order);
 

@@ -6,6 +6,10 @@
 
 /**
  * Add information to the metadata sent to Stripe.
+ *
+ * The settings array for the payment method instance used to process charges
+ * for the order may be accessed via a temporary property added to the order
+ * object for this hook: $order->payment_method_settings
  */
 function hook_commerce_stripe_metadata($order) {
   return array(
@@ -16,6 +20,10 @@ function hook_commerce_stripe_metadata($order) {
 
 /**
  * Alter the description of the order sent to Stripe in the payment details.
+ *
+ * The settings array for the payment method instance used to process charges
+ * for the order may be accessed via a temporary property added to the order
+ * object for this hook: $order->payment_method_settings
  */
 function hook_commerce_stripe_order_charge_alter(&$charge, $order) {
   // Example of alteration of the description.
@@ -23,6 +31,11 @@ function hook_commerce_stripe_order_charge_alter(&$charge, $order) {
     $card_id = rand(1, 10000);
     $charge['description'] = t('Token card id: %token_card_id', array('%token_card_id' => $card_id));
   }
-  // Add application fees.
-  $charge['application_fee'] = rand(1, 1000);
+
+  // Check to see if the site-wide Stripe Connect account is being used.
+  if (!empty($order->payment_method_settings['use_connected_account']) &&
+    $order->payment_method_settings['use_connected_account'] == 'site account') {
+    // Then add application fees.
+    $charge['application_fee'] = rand(1, 1000);
+  }
 }
