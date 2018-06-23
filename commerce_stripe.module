@@ -111,6 +111,8 @@ function commerce_stripe_libraries_postload_callback($library, $version = NULL, 
   if (!empty($library['loaded'])) {
     // @todo: Make this a global configuration, since merchants will only have one API key.
     $payment_method = commerce_payment_method_instance_load('commerce_stripe|commerce_payment_commerce_stripe');
+    $payment_method['settings'] += commerce_stripe_default_settings();
+
     \Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
 
     // If configured to, set the API Version for all requests.
@@ -195,6 +197,7 @@ function commerce_stripe_return_access($order, $transaction) {
  *   Settings form array
  */
 function commerce_stripe_settings_form($settings) {
+  $settings = (array) $settings + commerce_stripe_default_settings();
   $form = array();
   $currencies = commerce_currencies(TRUE);
   $currency_list = array();
@@ -1889,4 +1892,16 @@ function commerce_stripe_get_txn_message_success($txn_capture_bool) {
  */
 function commerce_stripe_get_txn_status($txn_capture_bool) {
   return ($txn_capture_bool) ? COMMERCE_PAYMENT_STATUS_SUCCESS : COMMERCE_PAYMENT_STATUS_PENDING;
+}
+
+/**
+ * Returns the default settings for the Stripe module.
+ */
+function commerce_stripe_default_settings() {
+  return array(
+    'secret_key' => '',
+    'public_key' => '',
+    'commerce_stripe_api_version' => COMMERCE_STRIPE_API_LATEST_TESTED,
+    'commerce_stripe_api_version_custom' => '',
+  );
 }
