@@ -188,11 +188,19 @@ function commerce_stripe_connect_admin_page() {
   else {
     $content['message']['#markup'] = t('Your site is not currently connected to your Standard Stripe account.');
 
-    $url = 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=' . $settings['platform_client_id'] . '&scope=read_write&state=' . drupal_get_token();
+    $url = 'https://connect.stripe.com/oauth/authorize';
+
+    $query = array(
+      'response_type' => 'code',
+      'client_id' => $settings['platform_client_id'],
+      'scope' => 'read_write',
+      'state' => drupal_get_token(),
+      'redirect_uri' => url('stripe-connect/oauth', array('absolute' => TRUE)),
+    );
 
     $content['stripe_button'] = array(
       '#type' => 'markup',
-      '#markup' => '<a href="' . $url . '" class="stripe-connect"><span>' . t('Connect with Stripe') . '</span></a>',
+      '#markup' => '<a href="' . url($url, array('query' => $query)) . '" class="stripe-connect"><span>' . t('Connect with Stripe') . '</span></a>',
       '#attached' => array(
         'css' => array(
           drupal_get_path('module', 'commerce_stripe_connect') . '/theme/commerce_stripe_connect.admin.css',
