@@ -110,19 +110,32 @@ function commerce_stripe_libraries_info() {
 function commerce_stripe_libraries_postload_callback($library, $version = NULL, $variant = NULL) {
   if (!empty($library['loaded'])) {
     // @todo: Make this a global configuration, since merchants will only have one API key.
-    $payment_method = commerce_payment_method_instance_load('commerce_stripe|commerce_payment_commerce_stripe');
-    $payment_method['settings'] += commerce_stripe_default_settings();
 
-    \Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
+    $payment_method = commerce_payment_method_instance_load('commerce_stripe|commerce_payment_commerce_stripe');
+
+    $settings = $payment_method['settings'];
+    if (!isset($settings['secret_key']) || empty($settings['secret_key'])) {
+      drupal_set_message(t('Stripe secret and public key are required in order to use Stripe payment method. See README.txt for instructions.'), 'warning');
+      $link = l(t('configured here'), 'admin/commerce/config/payment-methods');
+      drupal_set_message(t('Settings required for the Stripe payment method can be !link.', array('!link' => $link)), 'warning');
+      return;
+    }
+
+    \Stripe\Stripe::setApiKey(trim($settings['secret_key']));
 
     // If configured to, set the API Version for all requests.
     // Because the default is the version configured in the Stripe
     // Account dashboard, we only set the version if something else
     // has been configured by an administrator.
-    $api_version = $payment_method['settings']['commerce_stripe_api_version'];
+    if (!isset($settings['commerce_stripe_api_version'])) {
+      $api_version = COMMERCE_STRIPE_API_LATEST_TESTED;
+    }
+    else {
+      $api_version = $settings['commerce_stripe_api_version'];
+    }
     if ($api_version <> COMMERCE_STRIPE_API_ACCOUNT_DEFAULT) {
       if ($api_version == COMMERCE_STRIPE_API_VERSION_CUSTOM) {
-        $api_version = check_plain($payment_method['settings']['commerce_stripe_api_version_custom']);
+        $api_version = check_plain($settings['commerce_stripe_api_version_custom']);
       }
 
       try {
@@ -801,9 +814,6 @@ function _commerce_stripe_save_cardonfile($card, $uid, $payment_method, $set_def
 
 /**
  * Implements hook_commerce_payment_method_info_alter().
- *
- * Displays a warning if Stripe private and public keys are not set and the
- * user has permission to administer payment methods.
  */
 function commerce_stripe_commerce_payment_method_info_alter(&$payment_methods) {
   if (isset($payment_methods['commerce_stripe'])) {
@@ -853,29 +863,6 @@ function commerce_stripe_commerce_payment_method_info_alter(&$payment_methods) {
         'update callback' => 'commerce_stripe_cardonfile_update',
       );
     }
-
-    // Just return if they don't have permission to see these errors.
-    if (!user_access('administer payment methods')) {
-      return;
-    }
-    $found_errors = FALSE;
-    $settings = _commerce_stripe_load_settings();
-    // If secret_key or public_key is not set.
-    if (empty($settings['secret_key']) || empty($settings['public_key'])) {
-      $found_errors = TRUE;
-      drupal_set_message(t('Stripe secret and public key are required in order to use Stripe payment method. See README.txt for instructions.'), 'warning');
-    }
-    // If integration_type is not set.
-    if (empty($settings['integration_type'])) {
-      $found_errors = TRUE;
-      drupal_set_message(t('The Stripe payment method "Integration type" is not set. Stripe.js will be used by default.'), 'warning');
-    }
-    // If they need to configure anything, be nice and give them the link.
-    if ($found_errors) {
-      $link = l(t('configured here'), 'admin/commerce/config/payment-methods');
-      drupal_set_message(t('Settings required for the Stripe payment method can be !link.', array('!link' => $link)), 'warning');
-    }
-
   }
 }
 
