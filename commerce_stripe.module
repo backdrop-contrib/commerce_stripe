@@ -580,10 +580,10 @@ function commerce_stripe_submit_form($payment_method, $pane_values, $checkout_pa
 
     drupal_add_js(array('stripe' => array('checkout' => $checkout_settings)), 'setting');
   }
-  elseif ($integration_type === 'elements' && (empty($pane_values) || !is_numeric($pane_values['payment_details']['cardonfile']))) {
+  elseif ($integration_type === 'elements' && (empty($pane_values) || empty($pane_values['payment_details']['cardonfile']) || !is_numeric($pane_values['payment_details']['cardonfile']))) {
     $form = _commerce_stripe_elements_form();
   }
-  elseif ($integration_type === 'stripejs' && (empty($pane_values) || !is_numeric($pane_values['payment_details']['cardonfile']))) {
+  elseif ($integration_type === 'stripejs' && (empty($pane_values) || empty($pane_values['payment_details']['cardonfile']) || !is_numeric($pane_values['payment_details']['cardonfile']))) {
     $form = _commerce_stripe_credit_card_form();
   }
 
