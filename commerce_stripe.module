@@ -787,7 +787,7 @@ function _commerce_stripe_create_card($stripe_token, $account, $payment_method, 
     try {
       $customer = Stripe\Customer::create(array(
         'email' => $account->mail,
-        'description' => t('Customer for :mail', array(':mail' => $account->mail)),
+        'description' => t('Customer for !mail', array('!mail' => $account->mail)),
         'source' => $stripe_token,
       ));
 
