@@ -1711,9 +1711,14 @@ function commerce_stripe_payment_currencies() {
   if (!empty($payment_method['settings']['secret_key']) ||
     (!empty($payment_method['settings']['use_connected_account']) && $payment_method['settings']['use_connected_account'] == 'site account')) {
     _commerce_stripe_set_api_key($payment_method);
-    $info = \Stripe\Account::retrieve();
-    $country_spec = \Stripe\CountrySpec::retrieve($info->country);
-    $supported_currencies = $country_spec->supported_payment_currencies;
+    try {
+      $info = \Stripe\Account::retrieve();
+      $country_spec = \Stripe\CountrySpec::retrieve($info->country);
+      $supported_currencies = $country_spec->supported_payment_currencies;
+    }
+    catch (Exception $e) {
+      drupal_set_message(check_plain($e->getMessage()), 'error');
+    }
   }
 
   return $supported_currencies;
