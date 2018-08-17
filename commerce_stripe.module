@@ -1110,8 +1110,9 @@ function commerce_stripe_cardonfile_create_form($form, &$form_state, $op, $card_
   _commerce_stripe_form_configure_stripe_common($form, $stripe_token, $stripe_integration);
 
   $payment_method = commerce_payment_method_instance_load($card_data->instance_id);
-
   $stored_cards = commerce_cardonfile_load_multiple_by_uid($account->uid, $payment_method['instance_id']);
+  $set_new_card_default = variable_get('commerce_cardonfile_set_new_card_default', 0);
+  $valid_cards = array();
 
   if (!empty($stored_cards)) {
     $valid_cards = array_filter($stored_cards, 'commerce_cardonfile_validate_card_expiration');
@@ -1120,8 +1121,8 @@ function commerce_stripe_cardonfile_create_form($form, &$form_state, $op, $card_
   $form['credit_card']['cardonfile_instance_default'] = array(
     '#type' => 'checkbox',
     '#title' => t('Use as default card for payments with %method', array('%method' => $payment_method['display_title'])),
-    '#default_value' => empty($valid_cards) ? TRUE : FALSE,
-    '#disabled' => empty($valid_cards) ? TRUE : FALSE,
+    '#default_value' => (empty($valid_cards) || $set_new_card_default) ? TRUE : FALSE,
+    '#disabled' => (empty($valid_cards) || $set_new_card_default) ? TRUE : FALSE,
   );
 
   // Create a billing profile object and add the address form.
