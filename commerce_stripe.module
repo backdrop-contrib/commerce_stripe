@@ -233,18 +233,18 @@ function commerce_stripe_settings_form($settings) {
     }
   }
 
-  $form['secret_key'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Secret Key'),
-    '#description' => t('Secret API Key. Get your key from https://stripe.com/'),
-    '#default_value' => $settings['secret_key'],
-    '#required' => TRUE,
-  );
   $form['public_key'] = array(
     '#type' => 'textfield',
     '#title' => t('Publishable Key'),
     '#description' => t('Publishable API Key. Get your key from https://stripe.com/'),
     '#default_value' => $settings['public_key'],
+    '#required' => TRUE,
+  );
+  $form['secret_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Secret Key'),
+    '#description' => t('Secret API Key. Get your key from https://stripe.com/'),
+    '#default_value' => $settings['secret_key'],
     '#required' => TRUE,
   );
 
