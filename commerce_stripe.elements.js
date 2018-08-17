@@ -187,7 +187,7 @@
                 $("#card-errors").text('');
                 // Send the token to your server
                 $('#stripe_token').val(result.token.id);
-                var submitButton$ = $('#edit-submit');;
+                var submitButton$ = $('#edit-submit');
                 // Set a triggering element for the form.
                 var trigger$ = $("<input type='hidden' />").attr('name', submitButton$.attr('name')).attr('value', submitButton$.attr('value'));
                 form$.append(trigger$);
@@ -341,6 +341,6 @@
         }
       }
       return data;
-    },
+    }
   };
 })(jQuery);
