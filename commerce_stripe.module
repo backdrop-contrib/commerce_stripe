@@ -718,7 +718,7 @@ function commerce_stripe_submit_form_submit($payment_method, $pane_form, $pane_v
     drupal_set_message(t('We received the following error processing your card: :error
      Please enter your information again or try a different card.',
       array(':error' => $e->getMessage())), 'error');
-    watchdog('commerce_stripe', 'Following error received when processing card @stripe_error.',
+    watchdog('commerce_stripe', 'Following error received when processing card @stripe_error',
       array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
     if (is_a($e, 'Stripe\Error\Base')) {
       $transaction->remote_id = $e->getHttpStatus();
@@ -798,8 +798,8 @@ function _commerce_stripe_create_card($stripe_token, $account, $payment_method, 
       }
     }
     catch (Exception $e) {
-      drupal_set_message(t('We received the following error processing your card: %error. Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
-      watchdog('commerce_stripe', 'Following error received when creating Stripe customer: @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+      drupal_set_message(t('We received the following error processing your card: %error Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
+      watchdog('commerce_stripe', 'Following error received when creating Stripe customer: @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
       if ($throw_exceptions) {
         throw $e;
       }
@@ -814,8 +814,8 @@ function _commerce_stripe_create_card($stripe_token, $account, $payment_method, 
       return $card;
     }
     catch (Exception $e) {
-      drupal_set_message(t('We received the following error processing your card: %error. Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
-      watchdog('commerce_stripe', 'Following error received when adding a card to customer: @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+      drupal_set_message(t('We received the following error processing your card: %error Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
+      watchdog('commerce_stripe', 'Following error received when adding a card to customer: @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
       if ($throw_exceptions) {
         throw $e;
       }
@@ -1030,7 +1030,7 @@ function commerce_stripe_cardonfile_charge($payment_method, $card_data, $order, 
   catch (Exception $e) {
     drupal_set_message(t('We received the following error processing your card. Please enter your information again or try a different card.'), 'error');
     drupal_set_message(check_plain($e->getMessage()), 'error');
-    watchdog('commerce_stripe', 'Following error received when processing card @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+    watchdog('commerce_stripe', 'Following error received when processing card @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
     if (is_a($e, 'Stripe\Error\Base')) {
       $transaction->remote_id = $e->getHttpStatus();
       $transaction->payload[REQUEST_TIME] = $e->jsonBody;
@@ -1541,8 +1541,8 @@ function commerce_stripe_cardonfile_update($form, &$form_state, $payment_method,
     return TRUE;
   }
   catch (Exception $e) {
-    drupal_set_message(t('We received the following error processing your card: %error. Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
-    watchdog('commerce_stripe', 'Following error received when updating card @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+    drupal_set_message(t('We received the following error processing your card: %error Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
+    watchdog('commerce_stripe', 'Following error received when updating card @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
     return FALSE;
   }
 }
@@ -1564,8 +1564,8 @@ function commerce_stripe_cardonfile_delete($form, &$form_state, $payment_method,
     return TRUE;
   }
   catch (Exception $e) {
-    drupal_set_message(t('We received the following error processing your card: %error. Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
-    watchdog('commerce_stripe', 'Following error received when deleting card @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+    drupal_set_message(t('We received the following error processing your card: %error Please enter your information again or try a different card.', array('%error' => $e->getMessage())), 'error');
+    watchdog('commerce_stripe', 'Following error received when deleting card @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
     return FALSE;
   }
 }

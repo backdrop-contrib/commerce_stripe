@@ -308,7 +308,7 @@ function commerce_stripe_capture_form_submit($form, &$form_state) {
   catch (Exception $e) {
     drupal_set_message(t('We received the following error when trying to capture the transaction.'), 'error');
     drupal_set_message(check_plain($e->getMessage()), 'error');
-    watchdog('commerce_stripe', 'Following error received when processing card for capture @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+    watchdog('commerce_stripe', 'Following error received when processing card for capture @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
 
     $transaction->payload[REQUEST_TIME] = $e->json_body;
     $transaction->message = t('Capture processing error: @stripe_error', array('@stripe_error' => $e->getMessage()));
@@ -382,7 +382,7 @@ function commerce_stripe_void_form_submit($form, &$form_state) {
   catch (Exception $e) {
     drupal_set_message(t('We received the following error when trying to capture the transaction.'), 'error');
     drupal_set_message(check_plain($e->getMessage()), 'error');
-    watchdog('commerce_stripe', 'Following error received when processing card for capture @stripe_error.', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
+    watchdog('commerce_stripe', 'Following error received when processing card for capture @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
 
     $transaction->payload[REQUEST_TIME] = $e->json_body;
     $transaction->message = t('Capture processing error: @stripe_error', array('@stripe_error' => $e->getMessage()));
