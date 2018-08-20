@@ -57,7 +57,7 @@ function commerce_stripe_refund_form($form, &$form_state, $order, $transaction) 
   $options = array(
     'requested_by_customer' => t('Requested by customer'),
     'duplicate' => t('Duplicate'),
-    'fraudulent' => t('Fraduluent'),
+    'fraudulent' => t('Fraudulent'),
   );
 
   $form['reason'] = array(
