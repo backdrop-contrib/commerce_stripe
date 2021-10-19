@@ -451,6 +451,13 @@ function commerce_stripe_settings_form($settings) {
     ),
   );
 
+  $form['enable_credit_card_icons'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable credit card icons during checkout'),
+    '#description' => t('Enabling this setting will display credit card icons in the payment section during checkout.'),
+    '#default_value' => !empty($settings['enable_credit_card_icons']) ? $settings['enable_credit_card_icons'] : NULL,
+  );
+
   return $form;
 }
 
@@ -1975,5 +1982,81 @@ function commerce_stripe_default_settings() {
     'use_connected_account' => 'none',
     'commerce_stripe_api_version' => COMMERCE_STRIPE_API_LATEST_TESTED,
     'commerce_stripe_api_version_custom' => '',
+    'enable_credit_card_icons' => FALSE,
+  );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function commerce_stripe_form_commerce_checkout_form_alter(&$form, &$form_state, $form_id) {
+  if (empty($form['commerce_payment']['payment_method']['#options'])) {
+    return;
+  }
+
+  foreach ($form['commerce_payment']['payment_method']['#options'] as $key => &$value) {
+    list($method_id, $rule_name) = explode('|', $key);
+
+    if ($method_id !== 'commerce_stripe') {
+      continue;
+    }
+
+    if (!$form['commerce_payment']['payment_methods']['#value'][$key]['settings']['enable_credit_card_icons']) {
+      continue;
+    }
+
+    $checkout_currency = _commerce_stripe_load_setting('stripe_currency');
+    $icons = commerce_stripe_icons($checkout_currency);
+    $value .= '<div class="commerce-stripe-icons"><span class="label"></span>' . implode(' ', $icons) . '</div>';
+
+    $form['#attached']['css'][] = drupal_get_path('module', 'commerce_stripe') . '/css/commerce_stripe.checkout.css';
+  }
+}
+
+/**
+ * Returns an array of Stripe payment method icon img elements.
+ *
+ * @param $country
+ *   Passed country code that has been set for the payment method
+ *
+ * @return
+ *   The array of themed payment method icons keyed by name: visa, mastercard,
+ *   amex, discover, etc
+ */
+function commerce_stripe_icons($country = '') {
+  $icons = array();
+  if (empty($country)) {
+    return $icons;
+  }
+
+  foreach (commerce_stripe_payment_methods() as $name => $data) {
+    if (in_array($country, $data['currency'], TRUE)) {
+      $variables = array(
+        'path' => drupal_get_path('module', 'commerce_stripe') . '/images/' . $name . '.svg',
+        'title' => $data['title'],
+        'alt' => $data['title'],
+        'attributes' => array(
+          'class' => array('commerce-stripe-icon'),
+        ),
+      );
+      $icons[$name] = theme('image', $variables);
+    }
+  }
+
+  return $icons;
+}
+
+/**
+ * Returns an array of Stripe payment methods.
+ */
+function commerce_stripe_payment_methods() {
+  return array(
+    'visa' => array('title' => t('Visa'), 'currency' => array('USD', 'AUS', 'CAD', 'EUR')),
+    'mastercard' => array('title' => t('Mastercard'), 'currency' => array('USD', 'AUS', 'CAD', 'EUR')),
+    'amex' => array('title' => t('American Express'), 'currency' => array('USD', 'AUS', 'CAD', 'EUR')),
+    'discover' => array('title' => t('Discover'), 'currency' => array('USD')),
+    'diners' => array('title' => t('Diners Club'), 'currency' => array('USD')),
+    'jcb' => array('title' => t('JCB'), 'currency' => array('USD')),
+    'unionpay' => array('title' => t('Union Pay'), 'currency' => array('USD')),
   );
 }
