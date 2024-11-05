@@ -15,9 +15,9 @@ function commerce_stripe_refund_form($form, &$form_state, $order, $transaction) 
   $form_state['transaction'] = $transaction;
   $form_state['payment_method'] = $payment_method;
 
-   // Make sure the library is available.
+  // Make sure the library is available.
   if (!commerce_stripe_load_library()) {
-    drupal_set_message(t('Cannot load the Stripe PHP library'), 'error');
+    backdrop_set_message(t('Cannot load the Stripe PHP library'), 'error');
     return $form;
   }
 
@@ -38,7 +38,7 @@ function commerce_stripe_refund_form($form, &$form_state, $order, $transaction) 
     $form_state['stripe_charge'] = $charge;
   }
   catch (Exception $e) {
-    drupal_set_message(t('The original transaction could not be loaded. The error was: @error', array('@error' => $e->getMessage())), 'error');
+    backdrop_set_message(t('The original transaction could not be loaded. The error was: @error', array('@error' => $e->getMessage())), 'error');
     return $form;
   }
 
@@ -112,7 +112,7 @@ function commerce_stripe_refund_form_submit($form, &$form_state) {
 
   // Make sure the library is available.
   if (!commerce_stripe_load_library()) {
-    drupal_set_message(t('Cannot load the Stripe PHP library'), 'error');
+    backdrop_set_message(t('Cannot load the Stripe PHP library'), 'error');
     return FALSE;
   }
 
@@ -134,7 +134,7 @@ function commerce_stripe_refund_form_submit($form, &$form_state) {
   }
 
   // Let modules alter the refund object to add attributes.
-  drupal_alter('commerce_stripe_order_refund', $data, $form_state);
+  backdrop_alter('commerce_stripe_order_refund', $data, $form_state);
 
   try {
     Stripe\Stripe::setApiKey(trim($payment_method['settings']['secret_key']));
@@ -181,12 +181,12 @@ function commerce_stripe_refund_form_submit($form, &$form_state) {
       commerce_payment_transaction_save($refund_transaction);
 
       // Inform the user of the success and redirect them back to payments.
-      drupal_set_message(t('Refund processed successfully'));
+      backdrop_set_message(t('Refund processed successfully'));
       $form_state['redirect'] = 'admin/commerce/orders/' . $order->order_id . '/payment';
     }
   }
   catch (Exception $e) {
-    drupal_set_message(t('The transaction could not be refunded. The error was: @error',
+    backdrop_set_message(t('The transaction could not be refunded. The error was: @error',
       array('@error' => $e->getMessage())), 'error');
   }
 }
@@ -249,8 +249,8 @@ function commerce_stripe_capture_form_validate($form, &$form_state) {
 
   // Verify this transaction is authorization only (AUTH_ONLY).
   if ($transaction->remote_status != 'AUTH_ONLY') {
-    drupal_set_message(t('This operation can only be done on authorization only transactions.'), 'error');
-    drupal_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
+    backdrop_set_message(t('This operation can only be done on authorization only transactions.'), 'error');
+    backdrop_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
   }
 
   // Verify a positive numeric amount has been entered for capture.
@@ -265,8 +265,8 @@ function commerce_stripe_capture_form_validate($form, &$form_state) {
 
   // If the authorization has expired, display an error message and redirect.
   if (time() - $transaction->created > 86400 * 7) {
-    drupal_set_message(t('This authorization has passed its 7 day limit and cannot be captured.'), 'error');
-    drupal_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
+    backdrop_set_message(t('This authorization has passed its 7 day limit and cannot be captured.'), 'error');
+    backdrop_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
   }
 }
 
@@ -280,8 +280,8 @@ function commerce_stripe_capture_form_submit($form, &$form_state) {
   $dec_amount = number_format($form_state['values']['amount'], 2, '.', '');
 
   if (!commerce_stripe_load_library()) {
-    drupal_set_message(t('Error capturing payment. Please contact shop admin to proceed.'), 'error');
-    drupal_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
+    backdrop_set_message(t('Error capturing payment. Please contact shop admin to proceed.'), 'error');
+    backdrop_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
   }
 
   // Set the amount that is to be captured. This amount has already been
@@ -306,8 +306,8 @@ function commerce_stripe_capture_form_submit($form, &$form_state) {
     commerce_payment_transaction_save($transaction);
   }
   catch (Exception $e) {
-    drupal_set_message(t('We received the following error when trying to capture the transaction.'), 'error');
-    drupal_set_message(check_plain($e->getMessage()), 'error');
+    backdrop_set_message(t('We received the following error when trying to capture the transaction.'), 'error');
+    backdrop_set_message(check_plain($e->getMessage()), 'error');
     watchdog('commerce_stripe', 'Following error received when processing card for capture @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
 
     $transaction->payload[REQUEST_TIME] = $e->json_body;
@@ -360,8 +360,8 @@ function commerce_stripe_void_form_submit($form, &$form_state) {
   $order = $form_state['order'];
 
   if (!commerce_stripe_load_library()) {
-    drupal_set_message(t('Error voiding payment. Please contact shop admin to proceed.'), 'error');
-    drupal_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
+    backdrop_set_message(t('Error voiding payment. Please contact shop admin to proceed.'), 'error');
+    backdrop_goto('admin/commerce/orders/' . $form_state['order']->order_id . '/payment');
   }
   $payment_method = $form_state['payment_method'];
 
@@ -380,8 +380,8 @@ function commerce_stripe_void_form_submit($form, &$form_state) {
     commerce_payment_transaction_save($transaction);
   }
   catch (Exception $e) {
-    drupal_set_message(t('We received the following error when trying to capture the transaction.'), 'error');
-    drupal_set_message(check_plain($e->getMessage()), 'error');
+    backdrop_set_message(t('We received the following error when trying to capture the transaction.'), 'error');
+    backdrop_set_message(check_plain($e->getMessage()), 'error');
     watchdog('commerce_stripe', 'Following error received when processing card for capture @stripe_error', array('@stripe_error' => $e->getMessage()), WATCHDOG_NOTICE);
 
     $transaction->payload[REQUEST_TIME] = $e->json_body;

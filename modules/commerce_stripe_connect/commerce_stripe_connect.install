@@ -1,0 +1,26 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the commerce_stripe_connect module.
+ *
+ */
+
+
+/**
+ * Migrate commerce_stripe_connect variables to config.
+ */
+function commerce_stripe_connect_update_1000() {
+  $config = config('commerce_stripe_connect.settings');
+  $config->set('commerce_stripe_connect_settings', update_variable_get('commerce_stripe_connect_settings', 'dynamic value in file /commerce_stripe/modules/commerce_stripe_connect/commerce_stripe_connect.module line 245'));
+  $config->save();
+
+  update_variable_del('commerce_stripe_connect_settings');
+}
+
+/**
+ * Implements hook_install().
+ */
+function commerce_stripe_connect_install() {
+  // Dynamically generated variable data was detected.
+  // /commerce_stripe/modules/commerce_stripe_connect/commerce_stripe_connect.module line 245
+}

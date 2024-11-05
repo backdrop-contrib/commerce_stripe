@@ -1,5 +1,6 @@
 name = Commerce Stripe Connect
 description = Adds Stripe Connect support to the Commerce Stripe integration.
 package = Commerce (contrib)
-core = 7.x
+backdrop = 1.x
+type = module
 dependencies[] = commerce_stripe

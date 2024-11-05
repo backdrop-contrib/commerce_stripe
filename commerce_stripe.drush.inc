@@ -31,7 +31,7 @@ function drush_commerce_stripe_stripe_download() {
     $path = $args[0];
   }
   else {
-    $path = drush_get_context('DRUSH_DRUPAL_ROOT') . '/sites/all/libraries/stripe-php';
+    $path = drush_get_context('DRUSH_BACKDROP_ROOT') . '/sites/all/libraries/stripe-php';
   }
   if (drush_shell_exec('git clone git://github.com/stripe/stripe-php.git ' . $path)) {
     drush_shell_exec('git --git-dir=' . $path . '/.git --work-tree=' . $path . ' checkout v5.6.0');

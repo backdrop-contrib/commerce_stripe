@@ -13,3 +13,19 @@ function commerce_stripe_test_commerce_stripe_metadata($order) {
     'whatever' => 'test',
   );
 }
+
+/**
+ * Implements hook_autoload_info().
+ */
+function commerce_stripe_test_autoload_info() {
+  return array(
+  );
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function commerce_stripe_test_autoload_info() {
+  return array(
+  );
+}

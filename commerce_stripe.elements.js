@@ -1,6 +1,6 @@
 (function ($) {
 
-  Drupal.behaviors.commerce_stripe_elements = {
+  Backdrop.behaviors.commerce_stripe_elements = {
     /**
      * Attach Stripe behavior to form elements.
      *
@@ -82,7 +82,7 @@
                     return;
                   }
                 }
-                stripe.createToken(self.card, Drupal.behaviors.commerce_stripe_elements.extractTokenData(form$)).then(function (result) {
+                stripe.createToken(self.card, Backdrop.behaviors.commerce_stripe_elements.extractTokenData(form$)).then(function (result) {
                   if (result.error) {
                     // console.log('There was an error');
                     // console.log(result.error.message);
@@ -102,7 +102,7 @@
                     submitButton$.removeClass('auth-processing');
                     $('.checkout-processing').hide();
 
-                    Drupal.attachBehaviors(context);
+                    Backdrop.attachBehaviors(context);
                   }
                   else {
                     $("#card-errors").text('');
@@ -162,7 +162,7 @@
                 return;
               }
             }
-            stripe.createToken(self.card, Drupal.behaviors.commerce_stripe_elements.extractTokenData(form$)).then(function(result) {
+            stripe.createToken(self.card, Backdrop.behaviors.commerce_stripe_elements.extractTokenData(form$)).then(function(result) {
               if (result.error) {
                 // console.log('There was an error');
                 // console.log(result.error.message);
@@ -181,7 +181,7 @@
                 submitButton$.removeClass('auth-processing');
                 $('.checkout-processing').hide();
 
-                Drupal.attachBehaviors(context);
+                Backdrop.attachBehaviors(context);
               }
               else {
                 $("#card-errors").text('');
@@ -227,7 +227,7 @@
                 name: 'edit-payment-details-credit-card-owner'
               };
 
-              stripe.createToken(self.card, Drupal.behaviors.commerce_stripe_elements.extractTokenData(form$)).then(function(result) {
+              stripe.createToken(self.card, Backdrop.behaviors.commerce_stripe_elements.extractTokenData(form$)).then(function(result) {
                 if (result.error) {
                   // console.log('There was an error');
                   // console.log(result.error.message);
@@ -247,7 +247,7 @@
                   submitButton$.removeClass('auth-processing');
                   $('.checkout-processing').hide();
 
-                  Drupal.attachBehaviors(context);
+                  Backdrop.attachBehaviors(context);
                 }
                 else {
                   $("#card-errors").text('');
@@ -333,10 +333,10 @@
           if (formInputElement.length) {
             data[stripeName] = formInputElement.val();
           }
-          else if (typeof Drupal.settings.commerce_stripe_address !== 'undefined') {
+          else if (typeof Backdrop.settings.commerce_stripe_address !== 'undefined') {
             // Load the values from settings if the billing address isn't on
             // the same checkout pane as the address form.
-            data[stripeName] = Drupal.settings.commerce_stripe_address[stripeName];
+            data[stripeName] = Backdrop.settings.commerce_stripe_address[stripeName];
           }
         }
       }

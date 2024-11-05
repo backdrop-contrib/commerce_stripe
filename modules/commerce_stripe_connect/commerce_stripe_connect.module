@@ -15,7 +15,7 @@ function commerce_stripe_connect_menu() {
   $items['admin/commerce/config/stripe-platform'] = array(
     'title' => 'Stripe platform configuration',
     'description' => 'Register platform data, set application fee, and view connected accounts.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('commerce_stripe_platform_configuration_form'),
     'access arguments' => array('administer commerce stripe platform'),
     'file' => 'includes/commerce_stripe_connect.admin.inc',
@@ -67,7 +67,7 @@ function commerce_stripe_connect_authorize_access() {
   }
 
   // Prevent CSRF attacks with token verification.
-  if (drupal_valid_token(check_plain($_GET['state']))) {
+  if (backdrop_valid_token(check_plain($_GET['state']))) {
     return TRUE;
   }
 
@@ -82,22 +82,22 @@ function commerce_stripe_connect_authorize() {
   if (!empty($_GET['error'])) {
     // Malformed URL.
     if (empty($_GET['error_description'])) {
-      drupal_not_found();
+      backdrop_not_found();
     }
 
-    drupal_set_message(check_plain($_GET['error_description']), 'error');
-    drupal_goto('admin/commerce/config/stripe-connect');
+    backdrop_set_message(check_plain($_GET['error_description']), 'error');
+    backdrop_goto('admin/commerce/config/stripe-connect');
   }
 
   // Verify that the URL includes scope and code values.
   if (empty($_GET['scope']) || empty($_GET['code'])) {
-    drupal_not_found();
+    backdrop_not_found();
   }
 
   // Verify that the scope is read-write.
   if ($_GET['scope'] != 'read_write') {
-    drupal_set_message(t('Stripe connect integration requires read/write access.'), 'error');
-    drupal_goto('admin/commerce/config/stripe-connect');
+    backdrop_set_message(t('Stripe connect integration requires read/write access.'), 'error');
+    backdrop_goto('admin/commerce/config/stripe-connect');
   }
 
   // All is well. Get the authorization code and fetch user's credentials.
@@ -119,16 +119,16 @@ function commerce_stripe_connect_authorize() {
   ));
 
   $response = curl_exec($ch);
-  $response_body = drupal_json_decode($response);
+  $response_body = backdrop_json_decode($response);
 
   if (!empty($response_body['error'])) {
-    drupal_set_message(check_plain($response_body['error_description']), 'error');
-    drupal_goto('admin/commerce/config/stripe-connect');
+    backdrop_set_message(check_plain($response_body['error_description']), 'error');
+    backdrop_goto('admin/commerce/config/stripe-connect');
   }
 
   // Malformed data.
   if (empty($response_body['stripe_user_id']) || empty($response_body['access_token']) || empty($response_body['stripe_publishable_key'])) {
-    drupal_not_found();
+    backdrop_not_found();
   }
 
   // Set the connected account ID and API credentials.
@@ -137,8 +137,8 @@ function commerce_stripe_connect_authorize() {
   commerce_stripe_connect_set_setting('connected_public_key', check_plain($response_body['stripe_publishable_key']));
 
   // Redirect to the Stripe Connect page.
-  drupal_set_message(t('Your site has been connected to your Standard Stripe account.'));
-  drupal_goto('admin/commerce/config/stripe-connect');
+  backdrop_set_message(t('Your site has been connected to your Standard Stripe account.'));
+  backdrop_goto('admin/commerce/config/stripe-connect');
 }
 
 /**
@@ -239,10 +239,21 @@ function commerce_stripe_connect_default_settings() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function commerce_stripe_connect_config_info() {
+  $prefixes['commerce_stripe_connect.settings'] = array(
+    'label' => t('Commerce Stripe settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Returns the Stripe Connect settings as an associative array.
  */
 function commerce_stripe_connect_get_settings() {
-  return variable_get('commerce_stripe_connect_settings', commerce_stripe_connect_default_settings()) + commerce_stripe_connect_default_settings();
+  return config_get('commerce_stripe_connect.settings', 'commerce_stripe_connect_settings') + commerce_stripe_connect_default_settings();
 }
 
 /**
@@ -259,5 +270,5 @@ function commerce_stripe_connect_get_setting($key, $default_value = NULL) {
 function commerce_stripe_connect_set_setting($key, $value) {
   $settings = commerce_stripe_connect_get_settings();
   $settings[$key] = $value;
-  variable_set('commerce_stripe_connect_settings', $settings);
+  config_set('commerce_stripe_connect.settings', 'commerce_stripe_connect_settings', $settings);
 }

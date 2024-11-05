@@ -8,7 +8,7 @@
 /**
  * The test case
  */
-class commerce_stripeTestCase extends DrupalWebTestCase {
+class commerce_stripeTestCase extends BackdropWebTestCase {
   /**
    * Info for this test case.
    */

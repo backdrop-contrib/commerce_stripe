@@ -1,0 +1,6 @@
+[commerce_stripeTestCase]
+name = commerce_stripe: basic test
+description = Make sure that the hooks are called correctly to build the stripe request.
+group = commerce_stripe
+file = commerce_stripe.test
+

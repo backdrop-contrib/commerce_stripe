@@ -87,16 +87,6 @@ function commerce_stripe_requirements($phase) {
 }
 
 /**
- * Ensure libraries and registry caches are rebuilt to pick up changes.
- */
-function commerce_stripe_update_7302() {
-  registry_rebuild();
-  foreach (libraries_flush_caches() as $table) {
-    cache_clear_all('*', $table, TRUE);
-  }
-}
-
-/**
  * Implements hook_uninstall().
  */
 function commerce_stripe_uninstall() {
@@ -105,4 +95,22 @@ function commerce_stripe_uninstall() {
   if ($config) {
     rules_config_delete(array($config->id));
   }
+}
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function commerce_stripe_update_last_removed() {
+  return 7302;
+}
+
+/**
+ * Migrate commerce_stripe variables to config.
+ */
+function commerce_stripe_update_1000() {
+  $config = config('commerce_stripe.settings');
+  $config->set('commerce_stripe_owner_placeholder', update_variable_get('commerce_stripe_owner_placeholder', 'John Q. Smith'));
+  $config->save();
+
+  update_variable_del('commerce_stripe_owner_placeholder');
 }

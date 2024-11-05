@@ -4,7 +4,7 @@
  */
 
 (function ($) {
-  Drupal.behaviors.stripe = {
+  Backdrop.behaviors.stripe = {
     attach: function (context, settings) {
       if (typeof settings.stripe.fetched == 'undefined') {
         settings.stripe.fetched = true;
@@ -39,10 +39,10 @@
               if (formInputElement.length) {
                 cardValues[stripeName] = formInputElement.val();
               }
-              else if (typeof Drupal.settings.commerce_stripe_address != 'undefined') {
+              else if (typeof Backdrop.settings.commerce_stripe_address != 'undefined') {
                 // Load the values from settings if the billing address isn't on
                 // the same checkout pane as the address form.
-                cardValues[stripeName] = Drupal.settings.commerce_stripe_address[stripeName];
+                cardValues[stripeName] = Backdrop.settings.commerce_stripe_address[stripeName];
               }
             }
           }
@@ -53,19 +53,19 @@
         var makeResponseHandler = function (form$, errorDisplay$, onError, onSuccess) {
           return function (status, response) {
             var errorMessages = {
-              incorrect_number: Drupal.t("The card number is incorrect."),
-              invalid_request_error: Drupal.t("Could not find payment information."),
-              invalid_number: Drupal.t("The card number is not a valid credit card number."),
-              invalid_expiry_month: Drupal.t("The card's expiration month is invalid."),
-              invalid_expiry_year: Drupal.t("The card's expiration year is invalid."),
-              invalid_cvc: Drupal.t("The card's security code is invalid."),
-              expired_card: Drupal.t("The card has expired."),
-              incorrect_cvc: Drupal.t("The card's security code is incorrect."),
-              incorrect_zip: Drupal.t("The card's zip code failed validation."),
-              card_declined: Drupal.t("The card was declined."),
-              missing: Drupal.t("There is no card on a customer that is being charged."),
-              processing_error: Drupal.t("An error occurred while processing the card."),
-              rate_limit: Drupal.t("An error occurred due to requests hitting the API too quickly. Please let us know if you're consistently running into this error.")
+              incorrect_number: Backdrop.t("The card number is incorrect."),
+              invalid_request_error: Backdrop.t("Could not find payment information."),
+              invalid_number: Backdrop.t("The card number is not a valid credit card number."),
+              invalid_expiry_month: Backdrop.t("The card's expiration month is invalid."),
+              invalid_expiry_year: Backdrop.t("The card's expiration year is invalid."),
+              invalid_cvc: Backdrop.t("The card's security code is invalid."),
+              expired_card: Backdrop.t("The card has expired."),
+              incorrect_cvc: Backdrop.t("The card's security code is incorrect."),
+              incorrect_zip: Backdrop.t("The card's zip code failed validation."),
+              card_declined: Backdrop.t("The card was declined."),
+              missing: Backdrop.t("There is no card on a customer that is being charged."),
+              processing_error: Backdrop.t("An error occurred while processing the card."),
+              rate_limit: Backdrop.t("An error occurred due to requests hitting the API too quickly. Please let us know if you're consistently running into this error.")
             };
 
             if (response.error) {
@@ -194,7 +194,7 @@
               });
 
               // Set Checkout options.
-              $options = Drupal.settings.stripe.checkout;
+              $options = Backdrop.settings.stripe.checkout;
               handler.open($options);
 
               // Close Checkout on page navigation
@@ -308,7 +308,7 @@
             });
 
             // Set Checkout options.
-            $options = Drupal.settings.stripe.checkout;
+            $options = Backdrop.settings.stripe.checkout;
             handler.open($options);
 
             // Close Checkout on page navigation

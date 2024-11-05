@@ -1,4 +1,5 @@
-core = 7.x
+backdrop = 1.x
+type = module
 hidden = TRUE
 name = commerce_stripe_test
 description = Used during testing of commerce_stripe.

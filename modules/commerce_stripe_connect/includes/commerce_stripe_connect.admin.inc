@@ -19,6 +19,7 @@ function commerce_stripe_platform_configuration_form(array $form, array &$form_s
     $currency_options[$currency_code] = $currency['name'];
   }
 
+  $form['#config'] = 'commerce_stripe_connect.settings';
   $form['platform_client_id'] = array(
     '#type' => 'textfield',
     '#title' => t('Stripe platform client ID'),
@@ -37,12 +38,12 @@ function commerce_stripe_platform_configuration_form(array $form, array &$form_s
   /**
    * @todo Re-enable this when webhook support is actually added.
    * @see https://www.drupal.org/project/commerce_stripe/issues/2958923
-  $form['webhook_signing_secret'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Webhook signing secret'),
-    '#description' => t('Connect application endpoint secret. Get your secret from https://dashboard.stripe.com/account/webhooks'),
-    '#default_value' => $settings['webhook_signing_secret'],
-  );
+   $form['webhook_signing_secret'] = array(
+   '#type' => 'textfield',
+   '#title' => t('Webhook signing secret'),
+   '#description' => t('Connect application endpoint secret. Get your secret from https://dashboard.stripe.com/account/webhooks'),
+   '#default_value' => $settings['webhook_signing_secret'],
+   );
    */
 
   $form['application_fee'] = array(
@@ -86,7 +87,7 @@ function commerce_stripe_platform_configuration_form(array $form, array &$form_s
       'required' => array(
         ':input[name="application_fee_method"]' => array('value' => 'fixed'),
       ),
-    ),  
+    ),
   );
 
   $form['application_fee']['platform_currency'] = array(
@@ -128,7 +129,7 @@ function commerce_stripe_platform_configuration_form_validate($form, &$form_stat
       form_set_error('application_fee_percentage', t('The fee percentage must be a numeric value between 0 and 100.'));
     }
   }
-  
+
   // If the application fee is calculated as a fixed amount, ensure we were
   // given a non-negative number.
   if ($form_state['values']['application_fee_method'] == 'fixed') {
@@ -150,7 +151,7 @@ function commerce_stripe_platform_configuration_form_submit(array $form, array &
     commerce_stripe_connect_set_setting($key, $value);
   }
 
-  drupal_set_message(t('The configuration options have been saved.'));
+  backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**
@@ -183,7 +184,7 @@ function commerce_stripe_connect_admin_page() {
   if (!empty($settings['connected_account_id'])) {
     // @todo Add a list here of payment method rules configured to use it.
     $content['message']['#markup'] = t('Your site is connected to a Standard Stripe account.');
-    $content['disconnect_form'] = drupal_get_form('commerce_stripe_connect_admin_disconnect_form');
+    $content['disconnect_form'] = backdrop_get_form('commerce_stripe_connect_admin_disconnect_form');
   }
   else {
     $content['message']['#markup'] = t('Your site is not currently connected to your Standard Stripe account.');
@@ -194,7 +195,7 @@ function commerce_stripe_connect_admin_page() {
       'response_type' => 'code',
       'client_id' => $settings['platform_client_id'],
       'scope' => 'read_write',
-      'state' => drupal_get_token(),
+      'state' => backdrop_get_token(),
       'redirect_uri' => url('stripe-connect/oauth', array('absolute' => TRUE)),
     );
 
@@ -203,7 +204,7 @@ function commerce_stripe_connect_admin_page() {
       '#markup' => '<a href="' . url($url, array('query' => $query)) . '" class="stripe-connect"><span>' . t('Connect with Stripe') . '</span></a>',
       '#attached' => array(
         'css' => array(
-          drupal_get_path('module', 'commerce_stripe_connect') . '/theme/commerce_stripe_connect.admin.css',
+          backdrop_get_path('module', 'commerce_stripe_connect') . '/theme/commerce_stripe_connect.admin.css',
         ),
       ),
     );
@@ -230,7 +231,7 @@ function commerce_stripe_connect_admin_disconnect_form(array $form, array &$form
 function commerce_stripe_connect_admin_disconnect_form_submit($form, &$form_state) {
   // Exit now if for some reason the Stripe library is unavailable.
   if (!commerce_stripe_load_library()) {
-    drupal_set_message(t('The form did not submit because the Stripe PHP library was not found.'), 'error');
+    backdrop_set_message(t('The form did not submit because the Stripe PHP library was not found.'), 'error');
     return;
   }
 
@@ -256,17 +257,17 @@ function commerce_stripe_connect_admin_disconnect_form_submit($form, &$form_stat
       ))
     ));
     $response = curl_exec($ch);
-    $response_body = drupal_json_decode($response);
+    $response_body = backdrop_json_decode($response);
 
     // Display any errors if found.
     if (!empty($response_body['error'])) {
-      drupal_set_message(check_plain($response_body['error_description']), 'error');
+      backdrop_set_message(check_plain($response_body['error_description']), 'error');
       return;
     }
 
     // Show a 404 page if we received malformed data in the response.
     if (empty($response_body['stripe_user_id'])) {
-      drupal_not_found();
+      backdrop_not_found();
     }
   }
   catch (Exception $e) {
@@ -279,5 +280,5 @@ function commerce_stripe_connect_admin_disconnect_form_submit($form, &$form_stat
   commerce_stripe_connect_set_setting('connected_secret_key', '');
   commerce_stripe_connect_set_setting('connected_public_key', '');
 
-  drupal_set_message('Your Stripe account has been disconnected. Any payment methods that were using it will need to be reconfigured.');
+  backdrop_set_message('Your Stripe account has been disconnected. Any payment methods that were using it will need to be reconfigured.');
 }
