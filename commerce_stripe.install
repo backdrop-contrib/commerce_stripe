@@ -56,31 +56,33 @@ function commerce_stripe_requirements($phase) {
 
     $message = "Commerce Stripe is currently tested with stripe-php library versions @minimum_version through @maximum_version. Your version: @installed_version.";
     $library = libraries_load('stripe-php');
-    $detected = $library['version'];
-    $minimum_version = '3.0.0';
-    $maximum_version = '5.6.0';
-    $status = REQUIREMENT_OK;
-    $variables = array(
-      '@minimum_version' => $minimum_version,
-      '@maximum_version' => $maximum_version,
-      '@installed_version' => $detected,
-    );
-    if (version_compare($library['version'], $maximum_version, '>')) {
-      $variables['@upgrade_or_downgrade'] = 'Downgrading';
-      $status = REQUIREMENT_ERROR;
-      watchdog('commerce_stripe', $message, $variables, WATCHDOG_WARNING);
+    if (isset($library['version'])) {
+      $detected = $library['version'];
+      $minimum_version = '3.0.0';
+      $maximum_version = '5.6.0';
+      $status = REQUIREMENT_OK;
+      $variables = array(
+        '@minimum_version' => $minimum_version,
+        '@maximum_version' => $maximum_version,
+        '@installed_version' => $detected,
+      );
+      if (version_compare($library['version'], $maximum_version, '>')) {
+        $variables['@upgrade_or_downgrade'] = 'Downgrading';
+        $status = REQUIREMENT_ERROR;
+        watchdog('commerce_stripe', $message, $variables, WATCHDOG_WARNING);
+      }
+      if (version_compare($library['version'], $minimum_version, '<')) {
+        $variables['@upgrade_or_downgrade'] = 'Upgrading';
+        $status = REQUIREMENT_ERROR;
+        watchdog('commerce_stripe', $message, $variables, WATCHDOG_WARNING);
+      }
+      $requirements['commerce_stripe_php_version'] = array(
+        'title' => $t('Stripe PHP Library Version'),
+        'value' => $detected,
+        'severity' => $status,
+        'description' => $t($message, $variables),
+      );
     }
-    if (version_compare($library['version'], $minimum_version, '<')) {
-      $variables['@upgrade_or_downgrade'] = 'Upgrading';
-      $status = REQUIREMENT_ERROR;
-      watchdog('commerce_stripe', $message, $variables, WATCHDOG_WARNING);
-    }
-    $requirements['commerce_stripe_php_version'] = array(
-      'title' => $t('Stripe PHP Library Version'),
-      'value' => $detected,
-      'severity' => $status,
-      'description' => $t($message, $variables),
-    );
   }
 
   return $requirements;
@@ -93,7 +95,8 @@ function commerce_stripe_uninstall() {
   // Uninstall rules configuration.
   $config = rules_config_load('commerce_payment_commerce_stripe');
   if ($config) {
-    rules_config_delete(array($config->id));
+    //rules_config_delete(array($config->id));
+    $config->delete();
   }
 }
 
